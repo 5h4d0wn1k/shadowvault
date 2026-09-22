@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from ..crypto import derive_key, encrypt
 from ..vault.schema import (
@@ -13,7 +13,6 @@ from ..vault.schema import (
     Host,
     Note,
     Secret,
-    SecretType,
     Token,
 )
 
@@ -161,8 +160,8 @@ class BriefingGenerator:
     def add_summary(
         self,
         total_secrets: int,
-        by_type: Optional[dict[str, int]] = None,
-        engagement_info: Optional[dict[str, str]] = None,
+        by_type: dict[str, int] | None = None,
+        engagement_info: dict[str, str] | None = None,
     ) -> None:
         """Add a summary section.
 
@@ -198,7 +197,7 @@ class BriefingGenerator:
             "sections": self._sections,
         }
 
-    def to_json(self, indent: Optional[int] = None) -> str:
+    def to_json(self, indent: int | None = None) -> str:
         """Generate briefing as JSON string.
 
         Args:
@@ -212,7 +211,7 @@ class BriefingGenerator:
     def encrypt_briefing(
         self,
         password: str,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
     ) -> bytes:
         """Encrypt the briefing for secure transport.
 

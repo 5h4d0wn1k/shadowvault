@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-import secrets
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from ..crypto import (
-    CryptoError,
     DecryptionError,
     decrypt,
     derive_key,
@@ -19,19 +16,15 @@ from ..crypto import (
     zeroize,
 )
 from .audit import AuditLog
-from .opsec import AutoLocker, MemoryGuard, zeroize_bytes
+from .opsec import AutoLocker, zeroize_bytes
 from .schema import (
     AuditEntry,
     Credential,
-    EncryptionKey,
-    Hash,
     Host,
     Note,
     Secret,
     SecretType,
     TeamMember,
-    TeamRole,
-    Token,
     secret_from_dict,
 )
 
@@ -57,9 +50,9 @@ class Vault:
     def __init__(
         self,
         key: bytes,
-        vault_path: Optional[str] = None,
+        vault_path: str | None = None,
         kdf_method: str = "argon2",
-        kdf_salt: Optional[bytes] = None,
+        kdf_salt: bytes | None = None,
         auto_lock_seconds: int = 300,
     ):
         """Initialize vault (use Vault.create() or Vault.open() instead).
@@ -266,7 +259,7 @@ class Vault:
         )
         return secret.id
 
-    def get_secret(self, secret_id: str) -> Optional[Secret]:
+    def get_secret(self, secret_id: str) -> Secret | None:
         """Retrieve a secret by ID.
 
         Args:
@@ -310,9 +303,9 @@ class Vault:
 
     def list_secrets(
         self,
-        secret_type: Optional[SecretType] = None,
-        tags: Optional[list[str]] = None,
-        limit: Optional[int] = None,
+        secret_type: SecretType | None = None,
+        tags: list[str] | None = None,
+        limit: int | None = None,
     ) -> list[Secret]:
         """List secrets with optional filters.
 
@@ -349,12 +342,12 @@ class Vault:
 
     def search(
         self,
-        query: Optional[str] = None,
-        secret_type: Optional[SecretType] = None,
-        host: Optional[str] = None,
-        service: Optional[str] = None,
-        username: Optional[str] = None,
-        tags: Optional[list[str]] = None,
+        query: str | None = None,
+        secret_type: SecretType | None = None,
+        host: str | None = None,
+        service: str | None = None,
+        username: str | None = None,
+        tags: list[str] | None = None,
     ) -> list[Secret]:
         """Search secrets by various criteria.
 
@@ -431,7 +424,7 @@ class Vault:
         port: int = 0,
         domain: str = "",
         notes: str = "",
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
         **kwargs,
     ) -> Credential:
         """Convenience method to add a credential.
@@ -467,11 +460,11 @@ class Vault:
         self,
         ip_address: str,
         hostname: str = "",
-        ports: Optional[list[int]] = None,
+        ports: list[int] | None = None,
         os_info: str = "",
-        services: Optional[list[str]] = None,
+        services: list[str] | None = None,
         notes: str = "",
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
     ) -> Host:
         """Convenience method to add a host.
 
@@ -504,7 +497,7 @@ class Vault:
         content: str,
         category: str = "",
         notes: str = "",
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
     ) -> Note:
         """Convenience method to add a note.
 
@@ -526,7 +519,7 @@ class Vault:
         self.add_secret(note)
         return note
 
-    def update_secret(self, secret_id: str, **kwargs) -> Optional[Secret]:
+    def update_secret(self, secret_id: str, **kwargs) -> Secret | None:
         """Update fields on an existing secret.
 
         Args:
@@ -553,8 +546,8 @@ class Vault:
 
     def get_audit_log(
         self,
-        action: Optional[str] = None,
-        limit: Optional[int] = None,
+        action: str | None = None,
+        limit: int | None = None,
     ) -> list[AuditEntry]:
         """Get audit log entries.
 
@@ -570,8 +563,8 @@ class Vault:
     def export_secrets(
         self,
         output_path: str,
-        password: Optional[str] = None,
-        secret_ids: Optional[list[str]] = None,
+        password: str | None = None,
+        secret_ids: list[str] | None = None,
     ) -> None:
         """Export secrets to an encrypted file.
 
@@ -594,11 +587,9 @@ class Vault:
 
         if password:
             key, salt = derive_key(password)
-            key_id = generate_key_id(key)
         else:
             key = self._key
             salt = self._kdf_salt
-            key_id = self._key_id
 
         plaintext = json.dumps(export_data).encode("utf-8")
         encrypted = encrypt(plaintext, key)
@@ -685,7 +676,7 @@ class Vault:
         return self._key_id
 
     @property
-    def vault_path(self) -> Optional[str]:
+    def vault_path(self) -> str | None:
         """Get vault file path."""
         return self._vault_path
 

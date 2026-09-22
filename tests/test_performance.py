@@ -1,26 +1,19 @@
 """Additional tests for performance, edge cases, and integration."""
 
 import json
-import os
-import tempfile
 import time
-from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from shadowvault.crypto import derive_key, encrypt, decrypt
-from shadowvault.vault import (
-    Credential,
-    Hash,
-    Host,
-    Note,
-    SecretType,
-    Token,
-    Vault,
-)
+from shadowvault.crypto import decrypt, derive_key, encrypt
 from shadowvault.team import (
     TeamManager,
     TeamRole,
+)
+from shadowvault.vault import (
+    Hash,
+    Token,
+    Vault,
 )
 
 
@@ -103,7 +96,7 @@ class TestVaultPerformance:
     def test_search_by_host_performance(self, populated_vault):
         """Test search by host is fast."""
         start = time.time()
-        results = populated_vault.search(host="10.0.0.")
+        populated_vault.search(host="10.0.0.")
         elapsed = time.time() - start
         assert elapsed < 0.1
 

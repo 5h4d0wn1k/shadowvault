@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from shadowvault.migration import (
     detect_format,
     import_bitwarden_json,

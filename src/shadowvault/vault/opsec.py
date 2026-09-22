@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import ctypes
-import os
 import sys
 import threading
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Generator, Optional
 
 
 def zeroize_bytes(data: bytearray) -> None:
@@ -93,7 +92,7 @@ class AutoLocker:
         self._last_activity = time.monotonic()
         self._locked = False
         self._lock = threading.Lock()
-        self._timer: Optional[threading.Timer] = None
+        self._timer: threading.Timer | None = None
         self._enabled = True
 
     def touch(self) -> None:

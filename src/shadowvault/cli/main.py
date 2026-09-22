@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 import getpass
-import json
 import os
 import sys
-from typing import Optional
+from datetime import datetime, timezone
 
 from .. import __version__
-from ..crypto import DecryptionError, derive_key, decrypt
-from ..export import BriefingGenerator, generate_quick_briefing
+from ..crypto import DecryptionError
+from ..export import generate_quick_briefing
 from ..migration import (
     detect_format,
     import_bitwarden_json,
@@ -20,7 +19,7 @@ from ..migration import (
     import_keepass_csv,
     import_plaintext,
 )
-from ..vault import Vault, VaultError, VaultLockedError, VaultNotFoundError
+from ..vault import Vault, VaultLockedError, VaultNotFoundError
 
 
 class CLIError(Exception):
@@ -279,7 +278,7 @@ def cmd_get(args: argparse.Namespace) -> None:
         elif isinstance(secret, Note):
             print_yellow("  Note:")
             print(f"    Category:  {secret.category}")
-            print(f"    Content:")
+            print("    Content:")
             for line in secret.content.split("\n"):
                 print(f"      {line}")
 
@@ -443,7 +442,7 @@ def cmd_import(args: argparse.Namespace) -> None:
     vault = load_vault(args)
 
     try:
-        with open(args.file, "r", encoding="utf-8", errors="replace") as f:
+        with open(args.file, encoding="utf-8", errors="replace") as f:
             content = f.read()
 
         if args.format == "auto":
@@ -491,11 +490,10 @@ def cmd_rotate(args: argparse.Namespace) -> None:
     vault = load_vault(args)
 
     try:
-        from ..vault import Credential
-        secrets = vault.search(query="", secret_type=Credential)
+        from ..vault import Credential, SecretType
+        secrets = vault.search(query="", secret_type=SecretType.CREDENTIAL)
 
-        now = datetime.now()
-        from datetime import timedelta, timezone
+        now = datetime.now(timezone.utc)
 
         rotation_candidates = []
         for secret in secrets:
@@ -503,11 +501,13 @@ def cmd_rotate(args: argparse.Namespace) -> None:
                 continue
 
             # Check expiry
-            expiry_days = getattr(args, "expiry_days", 7)
             rotation_needed = False
 
             if secret.expires_at:
-                if secret.expires_at < now:
+                expires_at = secret.expires_at
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                if expires_at < now:
                     rotation_needed = True
 
             if secret.rotation_recommended:
@@ -649,7 +649,10 @@ def build_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="shadowvault",
-        description="shadowvault - Cryptographic secrets lifecycle manager for offensive security operations",
+        description=(
+            "shadowvault - Cryptographic secrets lifecycle manager for offensive "
+            "security operations"
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   shadowvault init
@@ -743,7 +746,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     # --- list ---
     list_parser = subparsers.add_parser("list", help="List secrets")
-    list_parser.add_argument("--type", help="Filter by secret type (credential, host, note, hash, token, key)")
+    list_parser.add_argument(
+        "--type",
+        help="Filter by secret type (credential, host, note, hash, token, key)",
+    )
     list_parser.add_argument("--tag", action="append", default=[], help="Filter by tag")
     list_parser.add_argument("--limit", type=int, help="Limit results")
     list_parser.set_defaults(func=cmd_list)
@@ -767,8 +773,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     # --- import ---
     import_parser = subparsers.add_parser("import", help="Import secrets")
-    import_parser.add_argument("--format", choices=["keepass", "bitwarden", "plaintext", "hashcat", "john", "auto"],
-                              default="auto", help="Source format")
+    import_parser.add_argument(
+        "--format",
+        choices=["keepass", "bitwarden", "plaintext", "hashcat", "john", "auto"],
+        default="auto",
+        help="Source format",
+    )
     import_parser.add_argument("--file", "-f", required=True, help="Input file")
     import_parser.add_argument("--service", help="Service for plaintext imports")
     import_parser.add_argument("--delimiter", default=":", help="Delimiter for plaintext imports")
@@ -777,7 +787,12 @@ def build_parser() -> argparse.ArgumentParser:
     # --- rotate ---
     rotate_parser = subparsers.add_parser("rotate", help="Check credential rotation status")
     rotate_parser.add_argument("--mark", action="store_true", help="Mark credentials for rotation")
-    rotate_parser.add_argument("--expiry-days", type=int, default=7, help="Days until expiry warning")
+    rotate_parser.add_argument(
+        "--expiry-days",
+        type=int,
+        default=7,
+        help="Days until expiry warning",
+    )
     rotate_parser.set_defaults(func=cmd_rotate)
 
     # --- audit ---
@@ -803,7 +818,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Main entry point for the CLI.
 
     Args:

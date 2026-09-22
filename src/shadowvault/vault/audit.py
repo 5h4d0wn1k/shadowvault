@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from typing import Optional
 
 from .schema import AuditEntry
 
@@ -18,7 +17,7 @@ class AuditLog:
     def log(
         self,
         action: str,
-        secret_id: Optional[str] = None,
+        secret_id: str | None = None,
         user: str = "local",
         details: str = "",
         success: bool = True,
@@ -48,10 +47,10 @@ class AuditLog:
 
     def get_entries(
         self,
-        action: Optional[str] = None,
-        user: Optional[str] = None,
-        secret_id: Optional[str] = None,
-        limit: Optional[int] = None,
+        action: str | None = None,
+        user: str | None = None,
+        secret_id: str | None = None,
+        limit: int | None = None,
         offset: int = 0,
     ) -> list[AuditEntry]:
         """Retrieve audit entries with optional filters.
@@ -85,8 +84,8 @@ class AuditLog:
 
     def count(
         self,
-        action: Optional[str] = None,
-        user: Optional[str] = None,
+        action: str | None = None,
+        user: str | None = None,
     ) -> int:
         """Count audit entries with optional filters."""
         entries = self._entries
@@ -107,7 +106,7 @@ class AuditLog:
         log._entries = [AuditEntry.from_dict(entry) for entry in data]
         return log
 
-    def to_json(self, indent: Optional[int] = None) -> str:
+    def to_json(self, indent: int | None = None) -> str:
         """Serialize audit log to JSON string."""
         return json.dumps(self.to_dict(), indent=indent, default=str)
 

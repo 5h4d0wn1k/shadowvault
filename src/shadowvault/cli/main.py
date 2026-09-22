@@ -490,10 +490,15 @@ def cmd_rotate(args: argparse.Namespace) -> None:
     vault = load_vault(args)
 
     try:
+        from datetime import timedelta
+
         from ..vault import Credential, SecretType
+
         secrets = vault.search(query="", secret_type=SecretType.CREDENTIAL)
 
         now = datetime.now(timezone.utc)
+        expiry_days = getattr(args, "expiry_days", 7)
+        warning_horizon = timedelta(days=expiry_days)
 
         rotation_candidates = []
         for secret in secrets:
@@ -507,7 +512,7 @@ def cmd_rotate(args: argparse.Namespace) -> None:
                 expires_at = secret.expires_at
                 if expires_at.tzinfo is None:
                     expires_at = expires_at.replace(tzinfo=timezone.utc)
-                if expires_at < now:
+                if expires_at < now + warning_horizon:
                     rotation_needed = True
 
             if secret.rotation_recommended:

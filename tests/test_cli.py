@@ -1,7 +1,8 @@
 """Tests for CLI interface."""
 
+import getpass
 import os
-import sys
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -15,7 +16,6 @@ from shadowvault.vault import (
     Hash,
     Host,
     Note,
-    SecretType,
     Token,
 )
 
@@ -351,3 +351,73 @@ class TestCLIIntegration:
         with pytest.raises(SystemExit) as exc_info:
             main(["invalid_command"])
         assert exc_info.value.code == 2  # argparse error
+
+    def test_rotate_command_end_to_end(self, tmp_path, monkeypatch):
+        """Test rotate command runs against a real vault (regression for datetime bug)."""
+        vault_path = str(tmp_path / "rotate.vault")
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": "test_password")
+
+        from shadowvault.vault import Vault
+
+        vault = Vault.create(path=vault_path, password="test_password")
+        vault.add_credential(
+            host="10.0.0.5",
+            service="ssh",
+            username="admin",
+            password="secret",
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+        vault.save()
+
+        ret = main(["--vault", vault_path, "rotate"])
+        assert ret == 0
+
+    def test_rotate_mark_end_to_end(self, tmp_path, monkeypatch, capsys):
+        """Test rotate --mark end-to-end (regression for datetime bug)."""
+        vault_path = str(tmp_path / "mark.vault")
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": "test_password")
+
+        from shadowvault.vault import Vault
+
+        vault = Vault.create(path=vault_path, password="test_password")
+        vault.add_credential(
+            host="10.0.0.5",
+            service="ssh",
+            username="admin",
+            password="secret",
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+        vault.save()
+
+        ret = main(["--vault", vault_path, "rotate", "--mark"])
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "Found" in captured.out
+
+    def test_brief_command_end_to_end(self, tmp_path, monkeypatch, capsys):
+        """Test brief command runs against a real vault (regression for datetime bug)."""
+        vault_path = str(tmp_path / "brief.vault")
+        output_path = str(tmp_path / "client_20260101.enc")
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": "test_password")
+        monkeypatch.setattr(
+            os.path,
+            "expanduser",
+            lambda path: output_path if "briefing_" in path else path,
+        )
+
+        from shadowvault.vault import Vault
+
+        vault = Vault.create(path=vault_path, password="test_password")
+        vault.add_credential(
+            host="10.0.0.5",
+            service="ssh",
+            username="admin",
+            password="secret",
+        )
+        vault.save()
+
+        ret = main(["--vault", vault_path, "brief", "--client", "client"])
+        assert ret == 0
+        assert os.path.exists(output_path)
+        captured = capsys.readouterr()
+        assert "saved" in captured.out

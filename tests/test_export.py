@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from shadowvault.export import BriefingGenerator, generate_quick_briefing
 from shadowvault.vault import (
     Credential,

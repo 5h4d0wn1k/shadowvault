@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import secrets
 from datetime import datetime, timezone
-from typing import Optional
 
-from ..crypto import generate_key_id
 from ..vault.schema import TeamMember, TeamRole
 
 
@@ -14,8 +12,11 @@ class TeamError(Exception):
     """Base exception for team operations."""
 
 
-class PermissionDenied(TeamError):
+class PermissionDeniedError(TeamError):
     """Raised when a user lacks required permissions."""
+
+
+PermissionDenied = PermissionDeniedError
 
 
 class MemberNotFoundError(TeamError):
@@ -171,7 +172,7 @@ class TeamManager:
             return True
         return False
 
-    def get_member(self, user_id: str) -> Optional[TeamMember]:
+    def get_member(self, user_id: str) -> TeamMember | None:
         """Get a team member.
 
         Args:
@@ -184,7 +185,7 @@ class TeamManager:
 
     def list_members(
         self,
-        role: Optional[TeamRole] = None,
+        role: TeamRole | None = None,
         active_only: bool = True,
     ) -> list[TeamMember]:
         """List team members.

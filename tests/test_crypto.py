@@ -1,6 +1,5 @@
 """Tests for the cryptographic engine."""
 
-import hashlib
 import os
 import secrets
 
@@ -9,14 +8,13 @@ import pytest
 from shadowvault.crypto import (
     CryptoError,
     DecryptionError,
-    KeyDerivationError,
     decrypt,
+    decrypt_string,
     derive_key,
     derive_key_argon2,
     derive_key_pbkdf2,
     encrypt,
     encrypt_string,
-    decrypt_string,
     generate_key_id,
     secure_compare,
     zeroize,

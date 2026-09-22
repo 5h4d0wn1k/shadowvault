@@ -6,14 +6,14 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class SecretType(Enum):
     """Types of secrets stored in the vault."""
     CREDENTIAL = "credential"
     HOST = "host"
-    TOKEN = "token"
+    TOKEN = "token"  # noqa: S105
     HASH = "hash"
     KEY = "key"
     NOTE = "note"
@@ -111,8 +111,8 @@ class Credential(Secret):
     password: str = ""
     domain: str = ""
     realm: str = ""
-    last_used: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    last_used: datetime | None = None
+    expires_at: datetime | None = None
     rotation_recommended: bool = False
 
     def __post_init__(self):
@@ -150,8 +150,12 @@ class Credential(Secret):
             password=data.get("password", ""),
             domain=data.get("domain", ""),
             realm=data.get("realm", ""),
-            last_used=datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None,
-            expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
+            last_used=(
+                datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None
+            ),
+            expires_at=(
+                datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
+            ),
             rotation_recommended=data.get("rotation_recommended", False),
         )
 
@@ -163,7 +167,7 @@ class Token(Secret):
     token_value: str = ""
     issuer: str = ""
     scopes: list[str] = field(default_factory=list)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     def __post_init__(self):
         self.secret_type = SecretType.TOKEN
@@ -192,7 +196,9 @@ class Token(Secret):
             token_value=data.get("token_value", ""),
             issuer=data.get("issuer", ""),
             scopes=data.get("scopes", []),
-            expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
+            expires_at=(
+                datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
+            ),
         )
 
 
@@ -201,9 +207,9 @@ class Hash(Secret):
     """Password hash or hash crack result."""
     hash_value: str = ""
     hash_type: str = ""
-    plaintext: Optional[str] = None
+    plaintext: str | None = None
     source: str = ""
-    crack_time: Optional[float] = None
+    crack_time: float | None = None
 
     def __post_init__(self):
         self.secret_type = SecretType.HASH
@@ -327,7 +333,7 @@ class AuditEntry:
     """Audit log entry."""
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     action: str = ""
-    secret_id: Optional[str] = None
+    secret_id: str | None = None
     user: str = "local"
     details: str = ""
     success: bool = True

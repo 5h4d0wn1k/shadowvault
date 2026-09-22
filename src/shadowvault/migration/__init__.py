@@ -5,15 +5,12 @@ from __future__ import annotations
 import csv
 import io
 import json
-from typing import Optional
 
 from ..vault.schema import (
     Credential,
     Hash,
-    Host,
     Note,
     Secret,
-    SecretType,
     Token,
 )
 
@@ -184,7 +181,7 @@ def import_bitwarden_json(json_content: str) -> list[Secret]:
                 # Add TOTP if present
                 if totp:
                     token = Token(
-                        token_type="totp",
+                        token_type="totp",  # noqa: S106
                         token_value=totp,
                         issuer=name,
                         notes=f"TOTP for {username}@{host}",

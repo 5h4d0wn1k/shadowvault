@@ -1,15 +1,18 @@
 """Tests for vault operations."""
 
-import json
 import os
-import tempfile
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
 
+from shadowvault.team import (
+    PermissionDenied,
+    TeamError,
+    TeamManager,
+    TeamRole,
+)
 from shadowvault.vault import (
-    AuditEntry,
     AuditLog,
     AutoLocker,
     Credential,
@@ -18,23 +21,14 @@ from shadowvault.vault import (
     Host,
     MemoryGuard,
     Note,
-    Secret,
     SecretType,
     SecureString,
     Token,
     Vault,
-    VaultError,
     VaultLockedError,
     VaultNotFoundError,
     secret_from_dict,
     zeroize_bytes,
-)
-from shadowvault.team import (
-    TeamError,
-    TeamManager,
-    TeamMember,
-    TeamRole,
-    PermissionDenied,
 )
 
 

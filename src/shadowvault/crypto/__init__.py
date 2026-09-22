@@ -7,16 +7,12 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import os
 import secrets
-import struct
-from typing import Optional
 
-from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
 
 # Constants
 SALT_SIZE = 32
@@ -43,7 +39,7 @@ class KeyDerivationError(CryptoError):
 
 def derive_key_argon2(
     password: str,
-    salt: Optional[bytes] = None,
+    salt: bytes | None = None,
     iterations: int = ARGON2_TIME_COST,
     memory_cost: int = ARGON2_MEMORY_COST,
     lanes: int = ARGON2_PARALLELISM,
@@ -82,7 +78,7 @@ def derive_key_argon2(
 
 def derive_key_pbkdf2(
     password: str,
-    salt: Optional[bytes] = None,
+    salt: bytes | None = None,
     iterations: int = PBKDF2_ITERATIONS,
 ) -> tuple[bytes, bytes]:
     """Derive a 256-bit key using PBKDF2-HMAC-SHA256.
@@ -117,7 +113,7 @@ def derive_key_pbkdf2(
 def derive_key(
     password: str,
     method: str = "argon2",
-    salt: Optional[bytes] = None,
+    salt: bytes | None = None,
     **kwargs,
 ) -> tuple[bytes, bytes]:
     """Derive a key using the specified method.
@@ -139,7 +135,7 @@ def derive_key(
         raise ValueError(f"Unsupported key derivation method: {method}")
 
 
-def encrypt(plaintext: bytes, key: bytes, associated_data: Optional[bytes] = None) -> bytes:
+def encrypt(plaintext: bytes, key: bytes, associated_data: bytes | None = None) -> bytes:
     """Encrypt data using AES-256-GCM.
 
     Args:
@@ -165,7 +161,7 @@ def encrypt(plaintext: bytes, key: bytes, associated_data: Optional[bytes] = Non
         raise CryptoError(f"Encryption failed: {e}") from e
 
 
-def decrypt(encrypted: bytes, key: bytes, associated_data: Optional[bytes] = None) -> bytes:
+def decrypt(encrypted: bytes, key: bytes, associated_data: bytes | None = None) -> bytes:
     """Decrypt data encrypted with AES-256-GCM.
 
     Args:
@@ -232,11 +228,11 @@ def secure_compare(a: bytes, b: bytes) -> bool:
     return hmac.compare_digest(a, b)
 
 
-def encrypt_string(plaintext: str, key: bytes, associated_data: Optional[bytes] = None) -> bytes:
+def encrypt_string(plaintext: str, key: bytes, associated_data: bytes | None = None) -> bytes:
     """Encrypt a string, returning bytes."""
     return encrypt(plaintext.encode("utf-8"), key, associated_data)
 
 
-def decrypt_string(encrypted: bytes, key: bytes, associated_data: Optional[bytes] = None) -> str:
+def decrypt_string(encrypted: bytes, key: bytes, associated_data: bytes | None = None) -> str:
     """Decrypt bytes to string."""
     return decrypt(encrypted, key, associated_data).decode("utf-8")

@@ -394,6 +394,44 @@ class TestCLIIntegration:
         captured = capsys.readouterr()
         assert "Found" in captured.out
 
+    def test_rotate_expiry_horizon(self, tmp_path, monkeypatch, capsys):
+        """Test rotate honors --expiry-days warning window."""
+        vault_path = str(tmp_path / "horizon.vault")
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": "test_password")
+
+        from shadowvault.vault import Vault
+
+        now = datetime.now(timezone.utc)
+        vault = Vault.create(path=vault_path, password="test_password")
+        vault.add_credential(
+            host="10.0.0.1",
+            service="ssh",
+            username="soon",
+            password="secret",
+            expires_at=now + timedelta(days=2),
+        )
+        vault.add_credential(
+            host="10.0.0.2",
+            service="ssh",
+            username="later",
+            password="secret",
+            expires_at=now + timedelta(days=30),
+        )
+        vault.save()
+
+        ret = main(["--vault", vault_path, "rotate", "--expiry-days", "7"])
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "10.0.0.1" in captured.out
+        assert "10.0.0.2" not in captured.out
+
+        captured = capsys.readouterr()
+        ret = main(["--vault", vault_path, "rotate", "--expiry-days", "45"])
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "10.0.0.1" in captured.out
+        assert "10.0.0.2" in captured.out
+
     def test_brief_command_end_to_end(self, tmp_path, monkeypatch, capsys):
         """Test brief command runs against a real vault (regression for datetime bug)."""
         vault_path = str(tmp_path / "brief.vault")

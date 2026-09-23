@@ -5,6 +5,10 @@
 > [SCOPE.md](SCOPE.md) before use. Use at your own risk; **AS IS**, no warranty.
 # shadowvault
 
+![CI](https://github.com/5h4d0wn1k/shadowvault/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+
 **Cryptographic secrets lifecycle manager for offensive security operations.**
 
 shadowvault is a hardened secrets vault designed for red team operations, penetration testing engagements, and CTF workflows. It solves the real problem: "where do I safely store, retrieve, and rotate the hundreds of credentials I collect during a pentest?"
@@ -21,7 +25,7 @@ This is NOT a password manager. It's a purpose-built tool for security professio
 - **Encrypted exports**: Generate briefing reports for client handoff
 - **Team mode**: Multi-user vaults with role-based access (owner/viewer/annotator)
 - **CLI + Python API**: Full programmatic access
-- **Integration**: Import from hashcat/john, export to sprayshed/hermesc2
+- **Integration**: Import from hashcat/john potfiles, KeePass CSV, Bitwarden JSON, and plaintext lists
 
 ## Quick Start
 
@@ -138,7 +142,7 @@ shadowvault import plaintext --file creds.txt --service ssh
 ## Development
 
 ```bash
-git clone https://github.com/your-org/shadowvault.git
+git clone https://github.com/5h4d0wn1k/shadowvault.git
 cd shadowvault
 pip install -e ".[dev]"
 pytest
@@ -148,6 +152,9 @@ pytest
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## Disclaimer
+## Legal
 
-This tool is for authorized security testing only. Users are responsible for complying with all applicable laws and regulations. The authors assume no liability for misuse.
+This tool is for authorized security testing only. Read [ETHICS.md](ETHICS.md),
+[SCOPE.md](SCOPE.md), and [SECURITY.md](SECURITY.md) before use. Users are
+responsible for complying with all applicable laws and regulations. The authors
+assume no liability for misuse.

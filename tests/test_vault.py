@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 import pytest
 
+from shadowvault.crypto import DecryptionError
 from shadowvault.team import (
     PermissionDenied,
     TeamError,
@@ -485,7 +486,7 @@ class TestVaultOperations:
         vault._vault_path = vault_path
         vault.save()
 
-        with pytest.raises(Exception):
+        with pytest.raises(DecryptionError):
             Vault.open(vault_path, "wrong_password")
 
     def test_vault_lock(self, vault):

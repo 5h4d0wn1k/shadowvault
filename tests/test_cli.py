@@ -432,6 +432,39 @@ class TestCLIIntegration:
         assert "10.0.0.1" in captured.out
         assert "10.0.0.2" in captured.out
 
+    def test_add_credential_domain_forwarded(self, tmp_path, monkeypatch):
+        """Test that --domain is stored on the credential (regression for dropped arg)."""
+        from shadowvault.vault import Credential, Vault
+
+        vault_path = str(tmp_path / "domain.vault")
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": "test_password")
+
+        Vault.create(path=vault_path, password="test_password").save()
+
+        ret = main(
+            [
+                "--vault",
+                vault_path,
+                "add",
+                "credential",
+                "--host",
+                "10.0.0.5",
+                "--service",
+                "ssh",
+                "--username",
+                "admin",
+                "--domain",
+                "corp.example.com",
+            ]
+        )
+        assert ret == 0
+
+        vault = Vault.open(vault_path, "test_password")
+        secrets = vault.list_secrets()
+        assert len(secrets) == 1
+        assert isinstance(secrets[0], Credential)
+        assert secrets[0].domain == "corp.example.com"
+
     def test_brief_command_end_to_end(self, tmp_path, monkeypatch, capsys):
         """Test brief command runs against a real vault (regression for datetime bug)."""
         vault_path = str(tmp_path / "brief.vault")

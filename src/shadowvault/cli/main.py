@@ -180,6 +180,7 @@ def cmd_add(args: argparse.Namespace) -> None:
                 username=args.username or "",
                 password=password,
                 port=args.port or 0,
+                domain=args.domain or "",
                 notes=args.notes or "",
                 tags=args.tag or [],
             )

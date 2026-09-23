@@ -163,7 +163,7 @@ class Vault:
         try:
             decrypted = decrypt(encrypted_vault, key)
         except DecryptionError:
-            zeroize(key)
+            zeroize(bytearray(key))
             raise DecryptionError("Invalid password or corrupted vault")
 
         # Parse decrypted vault
